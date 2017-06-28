@@ -90,16 +90,16 @@ def depthFirstSearch(problem):
   visited = set()
   predecessors = {}
 
-  # Push initial state action to stack
-  searchNodes.push((start, visited, predecessors))
+  # Push initial state to stack and keep track of visited
+  searchNodes.push((start, visited))
 
   # Search successors
   while not searchNodes.isEmpty():
-      (s, v, p) = searchNodes.pop()
+      (s, v) = searchNodes.pop()
 
       # If this is goal state
       if problem.isGoalState(s):
-          return buildPathFromPredecessors(p, start, s)
+          return buildPathFromPredecessors(predecessors, start, s)
 
       # Set this node as visited
       if s not in v:
@@ -108,8 +108,8 @@ def depthFirstSearch(problem):
           # Push unvisited successors to stack
           for state, action, cost in problem.getSuccessors(s):
               if state not in v:
-                  p[state] = (s, action)
-                  searchNodes.push((state, v, p))
+                  predecessors[state] = (s, action)
+                  searchNodes.push((state, v))
 
   return False
 
@@ -135,8 +135,35 @@ def breadthFirstSearch(problem):
   Search the shallowest nodes in the search tree first.
   [2nd Edition: p 73, 3rd Edition: p 82]
   """
-  "*** YOUR CODE HERE ***"
-  util.raiseNotDefined()
+
+  # Use queue (FIFO) to keep track of nodes to search
+  searchNodes = util.Queue()
+  start = problem.getStartState()
+  visited = set()
+  predecessors = {}
+
+  # Push initial state to queue and keep track of visited
+  searchNodes.push((start, visited))
+
+  # Search successors
+  while not searchNodes.isEmpty():
+      (s, v) = searchNodes.pop()
+
+      # If this is goal state
+      if problem.isGoalState(s):
+          return buildPathFromPredecessors(predecessors, start, s)
+
+      # Set this node as visited
+      if s not in v:
+          v.add(s)
+
+          # Push unvisited successors to queue
+          for state, action, cost in problem.getSuccessors(s):
+              if state not in v:
+                  predecessors[state] = (s, action)
+                  searchNodes.push((state, v))
+
+  return False
 
 def uniformCostSearch(problem):
   "Search the node of least total cost first. "
