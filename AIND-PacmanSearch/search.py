@@ -84,29 +84,51 @@ def depthFirstSearch(problem):
   print "Start's successors:", problem.getSuccessors(problem.getStartState())
   """
 
-  # Initial state
-  state = problem.getStartState()
-  path = []
-  visited = {}
+  # Use stack (LIFO) to keep track of nodes to search
+  searchNodes = util.Stack()
+  start = problem.getStartState()
+  visited = set()
+  predecessors = {}
 
-  return depthFirstSearchHelper(problem, state, path, visited)
+  # Push initial state action to stack
+  searchNodes.push((start, visited, predecessors))
 
-def depthFirstSearchHelper(problem, state, path, visited):
-  visited[state] = True;
+  # Search successors
+  while not searchNodes.isEmpty():
+      (s, v, p) = searchNodes.pop()
 
-  # Base case
-  if problem.isGoalState(state): return path
+      # If this is goal state
+      if problem.isGoalState(s):
+          return buildPathFromPredecessors(p, start, s)
 
-  # Recursively search successors
-  for s, a, c in problem.getSuccessors(state):
-      if s not in visited:
-          path.append(a)
-          solution = depthFirstSearchHelper(problem, s, path, visited)
-          if solution: return solution
-          path.pop()
+      # Set this node as visited
+      if s not in v:
+          v.add(s)
 
-  # If reached leaf not goal
+          # Push unvisited successors to stack
+          for state, action, cost in problem.getSuccessors(s):
+              if state not in v:
+                  p[state] = (s, action)
+                  searchNodes.push((state, v, p))
+
   return False
+
+def buildPathFromPredecessors(predecessors, start, goal):
+  """
+  Builds an array of actions given a predecessors dict, start state, and goal
+  state
+  """
+  path = []
+  state = goal
+
+  # Start from the goal and build path backwards
+  while state != start:
+      (prevState, action) = predecessors[state]
+      path.append(action)
+      state = prevState
+
+  # Return reverse
+  return path[::-1]
 
 def breadthFirstSearch(problem):
   """
