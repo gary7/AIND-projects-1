@@ -178,7 +178,6 @@ def uniformCostSearch(problem):
   while not searchNodes.isEmpty():
       # Pop a node from PQ and get state, visited, cost
       (state, cost) = searchNodes.pop()
-      print state, cost
 
       # If this is goal state
       if problem.isGoalState(state):
@@ -212,24 +211,24 @@ def aStarSearch(problem, heuristic=nullHeuristic):
 
   # Push initial state to PQ
   priority = 0 + heuristic(start, problem)
-  searchNodes.push((start, priority), 0)
+  searchNodes.push((start, 0), priority)
   visited.add(start)
 
   # Search successors
   while not searchNodes.isEmpty():
       # Pop a node from PQ and get state, visited, priority
-      (state, priority) = searchNodes.pop()
+      (state, cost) = searchNodes.pop()
 
       # If this is goal state
       if problem.isGoalState(state):
           return buildPathFromPredecessors(predecessors, start, state)
 
       # Push unvisited successors to queue
-      for nextState, action, cost in problem.getSuccessors(state):
+      for nextState, action, nextCost in problem.getSuccessors(state):
           if nextState not in visited:
               predecessors[nextState] = (state, action)
-              nextPriority = priority + cost + heuristic(nextState, problem)
-              searchNodes.push((nextState, priority), priority)
+              nextPriority = cost + nextCost + heuristic(nextState, problem)
+              searchNodes.push((nextState, cost + nextCost), nextPriority)
               visited.add(nextState)
 
   return False
