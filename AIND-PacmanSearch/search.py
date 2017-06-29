@@ -90,26 +90,24 @@ def depthFirstSearch(problem):
   visited = set()
   predecessors = {}
 
-  # Push initial state to stack and keep track of visited
-  searchNodes.push((start, visited))
+  # Push initial state to stack
+  searchNodes.push(start)
+  visited.add(start)
 
   # Search successors
   while not searchNodes.isEmpty():
-      (s, v) = searchNodes.pop()
+      state = searchNodes.pop()
 
       # If this is goal state
-      if problem.isGoalState(s):
-          return buildPathFromPredecessors(predecessors, start, s)
+      if problem.isGoalState(state):
+          return buildPathFromPredecessors(predecessors, start, state)
 
-      # Set this node as visited
-      if s not in v:
-          v.add(s)
-
-          # Push unvisited successors to stack
-          for state, action, cost in problem.getSuccessors(s):
-              if state not in v:
-                  predecessors[state] = (s, action)
-                  searchNodes.push((state, v))
+      # Push unvisited successors to stack
+      for nextState, action, cost in problem.getSuccessors(state):
+          if nextState not in visited:
+              predecessors[nextState] = (state, action)
+              searchNodes.push(nextState)
+              visited.add(nextState)
 
   return False
 
@@ -142,26 +140,24 @@ def breadthFirstSearch(problem):
   visited = set()
   predecessors = {}
 
-  # Push initial state to queue and keep track of visited
-  searchNodes.push((start, visited))
+  # Push initial state to queue
+  searchNodes.push(start)
+  visited.add(start)
 
   # Search successors
   while not searchNodes.isEmpty():
-      (s, v) = searchNodes.pop()
+      state = searchNodes.pop()
 
       # If this is goal state
-      if problem.isGoalState(s):
-          return buildPathFromPredecessors(predecessors, start, s)
+      if problem.isGoalState(state):
+          return buildPathFromPredecessors(predecessors, start, state)
 
-      # Set this node as visited
-      if s not in v:
-          v.add(s)
-
-          # Push unvisited successors to queue
-          for state, action, cost in problem.getSuccessors(s):
-              if state not in v:
-                  predecessors[state] = (s, action)
-                  searchNodes.push((state, v))
+      # Push unvisited successors to queue
+      for nextState, action, cost in problem.getSuccessors(state):
+          if nextState not in visited:
+              predecessors[nextState] = (state, action)
+              searchNodes.push(nextState)
+              visited.add(nextState)
 
   return False
 
@@ -174,27 +170,26 @@ def uniformCostSearch(problem):
   visited = set()
   predecessors = {}
 
-  # Push initial state to PQ and keep track of visited
-  searchNodes.push((start, visited, 0), 0)
+  # Push initial state to PQ
+  searchNodes.push((start, 0), 0)
+  visited.add(start)
 
   # Search successors
   while not searchNodes.isEmpty():
       # Pop a node from PQ and get state, visited, cost
-      (s, v, c) = searchNodes.pop()
+      (state, cost) = searchNodes.pop()
+      print state, cost
 
       # If this is goal state
-      if problem.isGoalState(s):
-          return buildPathFromPredecessors(predecessors, start, s)
+      if problem.isGoalState(state):
+          return buildPathFromPredecessors(predecessors, start, state)
 
-      # Set this node as visited
-      if s not in v:
-          v.add(s)
-
-          # Push unvisited successors to queue
-          for state, action, cost in problem.getSuccessors(s):
-              if state not in v:
-                  predecessors[state] = (s, action)
-                  searchNodes.push((state, v, c + cost), c + cost)
+      # Push unvisited successors to queue
+      for nextState, action, nextCost in problem.getSuccessors(state):
+          if nextState not in visited:
+              predecessors[nextState] = (state, action)
+              searchNodes.push((nextState, cost + nextCost), cost + nextCost)
+              visited.add(nextState)
 
   return False
 
@@ -215,29 +210,27 @@ def aStarSearch(problem, heuristic=nullHeuristic):
   visited = set()
   predecessors = {}
 
-  # Push initial state to PQ and keep track of visited
+  # Push initial state to PQ
   priority = 0 + heuristic(start, problem)
-  searchNodes.push((start, visited, 0), priority)
+  searchNodes.push((start, priority), 0)
+  visited.add(start)
 
   # Search successors
   while not searchNodes.isEmpty():
-      # Pop a node from PQ and get state, visited, cost
-      (s, v, c) = searchNodes.pop()
+      # Pop a node from PQ and get state, visited, priority
+      (state, priority) = searchNodes.pop()
 
       # If this is goal state
-      if problem.isGoalState(s):
-          return buildPathFromPredecessors(predecessors, start, s)
+      if problem.isGoalState(state):
+          return buildPathFromPredecessors(predecessors, start, state)
 
-      # Set this node as visited
-      if s not in v:
-          v.add(s)
-
-          # Push unvisited successors to queue
-          for state, action, cost in problem.getSuccessors(s):
-              if state not in v:
-                  predecessors[state] = (s, action)
-                  priority = c + cost + heuristic(state, problem)
-                  searchNodes.push((state, v, c + cost), priority)
+      # Push unvisited successors to queue
+      for nextState, action, cost in problem.getSuccessors(state):
+          if nextState not in visited:
+              predecessors[nextState] = (state, action)
+              nextPriority = priority + cost + heuristic(nextState, problem)
+              searchNodes.push((nextState, priority), priority)
+              visited.add(nextState)
 
   return False
 
