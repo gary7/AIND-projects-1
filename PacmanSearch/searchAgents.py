@@ -476,13 +476,12 @@ class ClosestDotSearchAgent(SearchAgent):
   def findPathToClosestDot(self, gameState):
     "Returns a path (a list of actions) to the closest dot, starting from gameState"
     # Here are some useful elements of the startState
-    startPosition = gameState.getPacmanPosition()
+    position = gameState.getPacmanPosition()
     food = gameState.getFood()
     walls = gameState.getWalls()
     problem = AnyFoodSearchProblem(gameState)
 
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    return search.ucs(problem)
 
 class AnyFoodSearchProblem(PositionSearchProblem):
   """
@@ -516,9 +515,8 @@ class AnyFoodSearchProblem(PositionSearchProblem):
     that will complete the problem definition.
     """
     x,y = state
+    return self.food[x][y]
 
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
 
 ##################
 # Mini-contest 1 #
@@ -529,7 +527,18 @@ class ApproximateSearchAgent(Agent):
 
   def registerInitialState(self, state):
     "This method is called before any moves are made."
-    "*** YOUR CODE HERE ***"
+    self.actions = []
+    currentState = state
+    while(currentState.getFood().count() > 0):
+      nextAction = self.getAction(currentState) # The missing piece
+      self.actions.append(nextAction)
+      legal = currentState.getLegalActions()
+      if nextAction not in legal:
+        t = (str(nextAction), str(currentState))
+        raise Exception, 'getAction returned an illegal move: %s!\n%s' % t
+      currentState = currentState.generateSuccessor(0, nextAction)
+    self.actionIndex = 0
+    print 'Path found with cost %d.' % len(self.actions)
 
   def getAction(self, state):
     """
@@ -537,8 +546,13 @@ class ApproximateSearchAgent(Agent):
     The Agent will receive a GameState and must return an action from
     Directions.{North, South, East, West, Stop}
     """
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    position = state.getPacmanPosition()
+    food = state.getFood()
+    walls = state.getWalls()
+    problem = AnyFoodSearchProblem(state)
+    heuristicFn = lambda nextPosition, prob: mazeDistance(position, nextPosition, state)
+
+    return search.astar(problem, heuristicFn)[0]
 
 def mazeDistance(point1, point2, gameState):
   """
