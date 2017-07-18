@@ -69,7 +69,7 @@ class AirCargoProblem(Problem):
                         ]
                         precond_neg = [expr("In({}, {})".format(c, p))]
                         effect_add = [expr("In({}, {})".format(c, p))]
-                        effect_rem = []
+                        effect_rem = [expr("At({}, {})".format(c, ap))]
                         load_action = Action(expr("Load({}, {}, {})".format(c, p, ap)),
                             [precond_pos, precond_neg],
                             [effect_add, effect_rem])
@@ -91,7 +91,7 @@ class AirCargoProblem(Problem):
                             expr("In({}, {})".format(c, p)),
                         ]
                         precond_neg = []
-                        effect_add = []
+                        effect_add = [expr("At({}, {})".format(c, ap))]
                         effect_rem = [expr("In({}, {})".format(c, p))]
                         unload_action = Action(expr("UnLoad({}, {}, {})".format(c, p, ap)),
                             [precond_pos, precond_neg],
@@ -208,10 +208,17 @@ class AirCargoProblem(Problem):
         conditions by ignoring the preconditions required for an action to be
         executed.
         """
-        # TODO implement (see Russell-Norvig Ed-3 10.2.3  or Russell-Norvig Ed-2 11.2)
+        kb = PropKB()
+        kb.tell(decode_state(node.state, self.state_map).pos_sentence())
         count = 0
-        return count
 
+        # ignoring preconditions, each goal condition can be satisfied by 1 action
+        # return count of goal conditions not yet satisfied
+        for clause in self.goal:
+            if clause not in kb.clauses:
+                count += 1
+
+        return count
 
 def air_cargo_p1() -> AirCargoProblem:
     cargos = ['C1', 'C2']
