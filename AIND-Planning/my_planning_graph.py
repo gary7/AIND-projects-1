@@ -200,7 +200,7 @@ def mutexify(node1: PgNode, node2: PgNode):
 class PlanningGraph():
     """
     A planning graph as described in chapter 10 of the AIMA text. The planning
-    graph can be used to reason about 
+    graph can be used to reason about
     """
 
     def __init__(self, problem: Problem, state: str, serial_planning=True):
@@ -311,6 +311,24 @@ class PlanningGraph():
         #   to see if a proposed PgNode_a has prenodes that are a subset of the previous S level.  Once an
         #   action node is added, it MUST be connected to the S node instances in the appropriate s_level set.
 
+        # New action level
+        a_level = set()
+        # The matching literal level
+        s_level = self.s_levels[level]
+
+        for action in self.all_actions:
+            a_node = PgNode_a(action)
+            # If all prerequisite literals for this action hold in s_level
+            if a_node.prenodes.issubset(s_level):
+                # Connect parent nodes
+                parents = {s for s in s_level if s in a_node.prenodes}
+                a_node.parents.update(parents)
+                # Add node to current a_level
+                a_level.add(a_node)
+
+
+        self.a_levels.append(a_level)
+
     def add_literal_level(self, level):
         """ add an S (literal) level to the Planning Graph
 
@@ -328,6 +346,15 @@ class PlanningGraph():
         #   may be "added" to the set without fear of duplication.  However, it is important to then correctly create and connect
         #   all of the new S nodes as children of all the A nodes that could produce them, and likewise add the A nodes to the
         #   parent sets of the S nodes
+
+        # New literal level
+        s_level = set()
+        # The matching action level
+        a_level = self.a_levels[level]
+
+        for a_node in a_level:
+
+            s_level.update(a_node.effnodes)
 
     def update_a_mutex(self, nodeset):
         """ Determine and update sibling mutual exclusion for A-level nodes
@@ -390,7 +417,7 @@ class PlanningGraph():
 
     def interference_mutex(self, node_a1: PgNode_a, node_a2: PgNode_a) -> bool:
         """
-        Test a pair of actions for mutual exclusion, returning True if the 
+        Test a pair of actions for mutual exclusion, returning True if the
         effect of one action is the negation of a precondition of the other.
 
         HINT: The Action instance associated with an action node is accessible
