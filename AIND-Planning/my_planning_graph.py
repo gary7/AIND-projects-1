@@ -326,7 +326,6 @@ class PlanningGraph():
                 # Add node to current a_level
                 a_level.add(a_node)
 
-
         self.a_levels.append(a_level)
 
     def add_literal_level(self, level):
@@ -350,11 +349,20 @@ class PlanningGraph():
         # New literal level
         s_level = set()
         # The matching action level
-        a_level = self.a_levels[level]
+        a_level = self.a_levels[level - 1]
 
+        # Add all eff nodes to s_level set
         for a_node in a_level:
-
             s_level.update(a_node.effnodes)
+
+        # Iterate through each s_node for each a_node and connect parents and children
+        for a_node in a_level:
+            for s_node in s_level:
+                if s_node in a_node.effnodes:
+                    a_node.children.add(s_node)
+                    s_node.parents.add(a_node)
+
+        self.s_levels.append(s_level)
 
     def update_a_mutex(self, nodeset):
         """ Determine and update sibling mutual exclusion for A-level nodes
