@@ -539,6 +539,25 @@ class PlanningGraph():
         :return: int
         """
         level_sum = 0
-        # TODO implement
-        # for each goal in the problem, determine the level cost, then add them together
+
+        for goal in self.problem.goal:
+            level = 0;
+            found = False;
+            while not found:
+                s_level = self.s_levels[level]
+                for node in s_level:
+                    literal = self.get_literal(node)
+                    if literal == goal:
+                        level_sum += level
+                        found = True
+                level += 1
+
         return level_sum
+
+    # Translate a node's symbol and is_pos properties into a literal
+    def get_literal(self, node) -> str:
+        literal = expr(node.symbol)
+        if not node.is_pos:
+            literal = expr('~{}'.format(node.symbol))
+
+        return literal
