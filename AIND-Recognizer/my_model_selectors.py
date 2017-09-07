@@ -91,13 +91,12 @@ class SelectorBIC(ModelSelector):
         for num_states in range(self.min_n_components, self.max_n_components + 1):
             try:
                 model = self.base_model(num_states)
+                bic_score = self.get_bic_score(model)
 
-                if model is not None:
-                    bic_score = self.get_bic_score(model)
+                if bic_score < best_score:
+                    best_score = bic_score
+                    best_model = model
 
-                    if bic_score < best_score:
-                        best_score = bic_score
-                        best_model = model
             except:
                 continue
 
@@ -128,13 +127,12 @@ class SelectorDIC(ModelSelector):
         for num_states in range(self.min_n_components, self.max_n_components + 1):
             try:
                 model = self.base_model(num_states)
+                dic_score = self.get_dic_score(model)
 
-                if model is not None:
-                    dic_score = self.get_dic_score(model)
+                if dic_score > best_score:
+                    best_score = dic_score
+                    best_model = model
 
-                    if dic_score > best_score:
-                        best_score = dic_score
-                        best_model = model
             except:
                 continue
 
@@ -149,5 +147,31 @@ class SelectorCV(ModelSelector):
     def select(self):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-        # TODO implement model selection using CV
-        raise NotImplementedError
+        split_method = KFold(n_splits = min(len(self.sequences), 3))
+        best_logL = float('-inf')
+
+        for num_states in range(self.min_n_components, self.max_n_components + 1):
+            logL_arr = []
+
+            for cv_train_idx, cv_test_idx in split_method.split(self.sequences):
+                train_X, train_Xlengths = combine_sequences(cv_train_idx, self.sequences)
+                test_X, test_Xlengths = combine_sequences(cv_test_idx, self.sequences)
+
+                try:
+                    model = GaussianHMM(n_components=num_states, covariance_type="diag", n_iter=1000,
+                                        random_state=self.random_state, verbose=False).fit(train_X, train_Xlengths)
+                    logL_arr.append(model.score(test_X, test_Xlengths))
+
+                except:
+                    continue
+
+            if logL_arr:
+                mean_logL = np.mean(logL_arr)
+            else:
+                mean_logL = float('-inf')
+
+            if mean_logL > best_logL:
+                best_logL = mean_logL
+                best_num_components = num_states
+
+        return self.base_model(best_num_components)
