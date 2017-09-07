@@ -73,7 +73,7 @@ class SelectorBIC(ModelSelector):
         n = model.n_components
         d = model.n_features
         p = n**2 + 2 * n * d - 1
-        logN = np.log(sum(self.lengths))
+        logN = np.log(len(self.X))
 
         return -2 * logL + p * logN
 
@@ -89,14 +89,17 @@ class SelectorBIC(ModelSelector):
         best_model = None
 
         for num_states in range(self.min_n_components, self.max_n_components + 1):
-            model = self.base_model(num_states)
+            try:
+                model = self.base_model(num_states)
 
-            if model is not None:
-                bic_score = self.get_bic_score(model)
+                if model is not None:
+                    bic_score = self.get_bic_score(model)
 
-                if bic_score < best_score:
-                    best_score = bic_score
-                    best_model = model
+                    if bic_score < best_score:
+                        best_score = bic_score
+                        best_model = model
+            except:
+                continue
 
         return best_model
 
@@ -109,12 +112,33 @@ class SelectorDIC(ModelSelector):
     http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.58.6208&rep=rep1&type=pdf
     DIC = log(P(X(i)) - 1/(M-1)SUM(log(P(X(all but i))
     '''
+    def get_dic_score(self, model):
+        log_this_word = model.score(self.X, self.lengths)
+        other_words = [word for word in self.words.keys() if word != self.this_word]
+        logs_other_words = [model.score(X, Xlengths) for (X, Xlengths) in [self.hwords[word] for word in other_words]]
+
+        return log_this_word - sum(logs_other_words) / len(other_words)
 
     def select(self):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-        # TODO implement model selection based on DIC scores
-        raise NotImplementedError
+        best_score = float('-inf')
+        best_model = None
+
+        for num_states in range(self.min_n_components, self.max_n_components + 1):
+            try:
+                model = self.base_model(num_states)
+
+                if model is not None:
+                    dic_score = self.get_dic_score(model)
+
+                    if dic_score > best_score:
+                        best_score = dic_score
+                        best_model = model
+            except:
+                continue
+
+        return best_model
 
 
 class SelectorCV(ModelSelector):
