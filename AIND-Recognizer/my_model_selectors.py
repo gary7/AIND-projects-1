@@ -91,11 +91,13 @@ class SelectorBIC(ModelSelector):
         for num_states in range(self.min_n_components, self.max_n_components + 1):
             try:
                 model = self.base_model(num_states)
-                bic_score = self.get_bic_score(model)
 
-                if bic_score < best_score:
-                    best_score = bic_score
-                    best_model = model
+                if model is not None:
+                    bic_score = self.get_bic_score(model)
+
+                    if bic_score < best_score:
+                        best_score = bic_score
+                        best_model = model
 
             except:
                 pass
