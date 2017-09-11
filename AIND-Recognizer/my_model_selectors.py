@@ -72,10 +72,10 @@ class SelectorBIC(ModelSelector):
         logL = model.score(self.X, self.lengths)
         n = model.n_components
         d = model.n_features
+        N = len(self.X)
         p = n**2 + 2 * n * d - 1
-        logN = np.log(len(self.X))
 
-        return -2 * logL + p * logN
+        return -2 * logL + p * np.log(N)
 
     def select(self):
         """ select the best model for self.this_word based on
@@ -98,7 +98,7 @@ class SelectorBIC(ModelSelector):
                     best_model = model
 
             except:
-                continue
+                pass
 
         return best_model
 
@@ -113,8 +113,9 @@ class SelectorDIC(ModelSelector):
     '''
     def get_dic_score(self, model):
         log_this_word = model.score(self.X, self.lengths)
-        other_words = [word for word in self.words.keys() if word != self.this_word]
-        logs_other_words = [model.score(X, Xlengths) for (X, Xlengths) in [self.hwords[word] for word in other_words]]
+        other_words = [self.hwords[word] for word in self.words.keys() if word != self.this_word]
+        logs_other_words = [model.score(X, lengths) for (X, lengths) in other_words]
+        o = [word for word in self.words.keys() if word != self.this_word]
 
         return log_this_word - sum(logs_other_words) / len(other_words)
 
@@ -134,7 +135,7 @@ class SelectorDIC(ModelSelector):
                     best_model = model
 
             except:
-                continue
+                pass
 
         return best_model
 
@@ -147,31 +148,36 @@ class SelectorCV(ModelSelector):
     def select(self):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-        split_method = KFold(n_splits = min(len(self.sequences), 3))
         best_logL = float('-inf')
+        best_num_components = None
 
         for num_states in range(self.min_n_components, self.max_n_components + 1):
             logL_arr = []
 
-            for cv_train_idx, cv_test_idx in split_method.split(self.sequences):
-                train_X, train_Xlengths = combine_sequences(cv_train_idx, self.sequences)
-                test_X, test_Xlengths = combine_sequences(cv_test_idx, self.sequences)
+            try:
+                split_method = KFold(n_splits=min(len(self.lengths), 3))
+                for cv_train_idx, cv_test_idx in split_method.split(self.sequences):
+                    train_X, train_Xlengths = combine_sequences(cv_train_idx, self.sequences)
+                    test_X, test_Xlengths = combine_sequences(cv_test_idx, self.sequences)
 
-                try:
-                    model = GaussianHMM(n_components=num_states, covariance_type="diag", n_iter=1000,
-                                        random_state=self.random_state, verbose=False).fit(train_X, train_Xlengths)
-                    logL_arr.append(model.score(test_X, test_Xlengths))
+                    try:
+                        model = GaussianHMM(n_components=num_states, covariance_type="diag", n_iter=1000,
+                                            random_state=self.random_state, verbose=False).fit(train_X, train_Xlengths)
+                        logL_arr.append(model.score(test_X, test_Xlengths))
 
-                except:
-                    continue
+                    except:
+                        pass
 
-            if logL_arr:
-                mean_logL = np.mean(logL_arr)
-            else:
-                mean_logL = float('-inf')
+                if logL_arr:
+                    mean_logL = np.mean(logL_arr)
+                else:
+                    mean_logL = float('-inf')
 
-            if mean_logL > best_logL:
-                best_logL = mean_logL
-                best_num_components = num_states
+                if mean_logL > best_logL:
+                    best_logL = mean_logL
+                    best_num_components = num_states
+
+            except:
+                pass
 
         return self.base_model(best_num_components)

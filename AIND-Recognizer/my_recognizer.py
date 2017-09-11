@@ -33,7 +33,7 @@ def recognize(models: dict, test_set: SinglesData):
                 prob_dict[word] = float('-inf')
 
         probabilities.append(prob_dict)
-        guess = max([(max_word, max_log_value) for max_word, max_log_value in prob_dict.items()])[0]
+        guess = max([(max_log_value, max_word) for max_word, max_log_value in prob_dict.items()])[1]
         guesses.append(guess)
 
     return probabilities, guesses
