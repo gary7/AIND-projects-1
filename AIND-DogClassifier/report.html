@@ -14393,6 +14393,7 @@ test_{network} = bottleneck_features['test']</code></pre>
 </code></pre>
 <p><strong>Question 5:</strong> Outline the steps you took to get to your final CNN architecture and your reasoning at each step.  Describe why you think the architecture is suitable for the current problem.</p>
 <p><strong>Answer:</strong> Similar to above, we use the pre-trained Resnet50 model as a fixed feature extractor, and feed the output of the last convolutional layer to a global average pooling layer and then a dense layer with softmax activation to output probabilities for each class.</p>
+<p>Transfer learning works well for an image classification problem such as this, because we are taking state of the art CNN models that have already been extensively fine-tuned and experimented with, trained on the large ImageNet dataset using much more powerful machines and for longer periods of time, and then adapting those models to find patterns for our specific classification task. We are keeping the earlier layers of these models that detect general features such as edges, shapes, blobs of color, and then replacing the final layers which detect more specific features related to dogs. In the end, we save a lot of time and effort using a pre-trained model and still retain its high accuracy.</p>
 
 </div>
 </div>
